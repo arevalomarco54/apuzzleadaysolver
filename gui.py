@@ -1,5 +1,6 @@
 import pygame
 import math
+import numpy as np
 # Define grid dimensions
 CELL_SIZE =60
 BLANK_SQUARES = 2
@@ -42,9 +43,52 @@ class Piece:
             pygame.draw.rect(screen, BLACK, self.rect)
         else:
             pygame.draw.rect(screen, self.color, self.rect)
+        
 class BigPiece():
     def __init__(self, shape):
         self.shape = shape
+        self.color = BLUE
+        self.pieces = []
+        self.clickedPiece = None
+        self.construct()
+    def rotate(self):
+        self.shape = np.rot90(self.shape)
+        self.construct()
+    def construct(self):
+        self.pieces = []
+        for i in range(len(self.shape)):
+            row = []
+            for j in range(len(self.shape[i])):
+                if (self.shape[i][j]==1):
+                    piece = Piece(j*CELL_SIZE, i*CELL_SIZE, self.color)
+                    row.append(piece)
+            self.pieces.append(row)
+    def highlight(self, t):
+        for row in self.pieces:
+            for piece in row:
+                piece.highlighted=t
+    
+    def draw(self, screen):
+        for row in self.pieces:
+            for piece in row:
+                piece.draw(screen)
+
+    def checkClicked(self,x,y):
+        for row in self.pieces:
+            for piece in row:
+                if (piece.x <=x and (piece.x+PIECE_SIZE)>=x and piece.y <=y and (piece.y+PIECE_SIZE)>=y): 
+                    self.highlight(True)
+                    self.clickedPiece = piece
+                    return True
+        return False
+
+    def translate(self, rows, cols):
+        for row in self.pieces:
+            for piece in row:
+                piece.y += rows * CELL_SIZE
+                piece.x += cols * CELL_SIZE
+                piece.rect.topleft = (piece.x, piece.y)
+
     
 #define Board class
 class Board():
@@ -64,7 +108,32 @@ class Board():
             for j in range(len(board[i])):
                 screen.blit(self.font.render(str(board[i][j]), True, BLACK), (WHITE_SPACE+j*CELL_SIZE, WHITE_SPACE+CELL_SIZE/4+i*CELL_SIZE))
 # Create a list of pieces
-pieces = [Piece(0, 0, BLUE)]
+zpiece = BigPiece(np.array([[1,1,0],
+                        [0,1,0],
+                        [0,1,1]]))
+corner_piece = BigPiece(np.array([[1,0,0],
+                                [1,0,0],
+                                [1,1,1]]))
+blockpiece = BigPiece(np.array([[1,1,1],
+                            [1,1,1]]))
+upiece = BigPiece( np.array([[1,0,1],
+                        [1,1,1]]))
+pinkpiece = BigPiece(np.array([[1,1,0],
+                            [1,1,1]]))
+lpiece = BigPiece(np.array([[1,0],
+                        [1,0],
+                        [1,0],
+                        [1,1]]))
+ypiece = BigPiece(np.array([[1,0],
+                        [1,1],
+                        [1,0],
+                        [1,0]]))
+zzpiece = BigPiece(np.array([[1,0],
+                        [1,0],
+                        [1,1],
+                        [0,1]]))
+pieces = []
+pieces.append(zpiece)
 cpiece = -1
 board = Board()
 # Main loop
@@ -74,23 +143,31 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT:
+                print('yay')
+                if(cpiece>-1):
+                    clicked = pieces[cpiece]
+                    clicked.rotate()
+                    clicked.highlight(False)
+                    cpiece = -1
+
         # Handle mouse click to create new pieces
         if event.type == pygame.MOUSEBUTTONDOWN:
             x, y = pygame.mouse.get_pos()
             print(x,y)
             if (cpiece>-1):
-                print()
-                pieces[cpiece].snap_to_grid(x,y)
-                piece.highlighted=False
+                clicked = pieces[cpiece] 
+                cols = math.floor(x / CELL_SIZE)-(clicked.clickedPiece.x/CELL_SIZE)
+                rows = math.floor(y / CELL_SIZE)-(clicked.clickedPiece.y/CELL_SIZE)
+                clicked.translate(rows,cols)
+                clicked.highlight(False)
                 cpiece = -1
             else:
                 for i in range(len(pieces)):
-                    piece = pieces[i]
-                    print(piece.x, piece.y)
-                    if (piece.x <=x and (piece.x+PIECE_SIZE)>=x and piece.y <=y and (piece.y+PIECE_SIZE)>=y): 
+                    if(piece.checkClicked(x,y)): 
                         cpiece = i
-                        piece.highlighted=True
+
 
 
     # Fill screen with white
