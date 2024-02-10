@@ -43,6 +43,7 @@ class Piece:
         else:
             pygame.draw.rect(screen, self.color, self.rect)
 
+class big
 # Create a list of pieces
 pieces = [Piece(0, 0, BLUE)]
 cpiece = -1
@@ -69,8 +70,6 @@ while running:
                     if (piece.x <=x and (piece.x+PIECE_SIZE)>=x and piece.y <=y and (piece.y+PIECE_SIZE)>=y): 
                         cpiece = i
                         piece.highlighted=True
-                        print('yes')
-
 
 
     # Fill screen with white
