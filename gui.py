@@ -42,13 +42,34 @@ class Piece:
             pygame.draw.rect(screen, BLACK, self.rect)
         else:
             pygame.draw.rect(screen, self.color, self.rect)
-
-class big
+class BigPiece():
+    def __init__(self, shape):
+        self.shape = shape
+    
+#define Board class
+class Board():
+    def __init__(self):
+        self.font = pygame.font.SysFont('Times New Roman', int(CELL_SIZE/2))
+    
+    #Draw grid
+    def drawGrid(self):
+        for i in range(WHITE_SPACE, GRID_WIDTH+1-WHITE_SPACE, CELL_SIZE):
+            pygame.draw.line(screen, BLACK, (i, WHITE_SPACE), (i, GRID_HEIGHT-WHITE_SPACE), 1)
+        for i in range(WHITE_SPACE, GRID_HEIGHT+1-WHITE_SPACE, CELL_SIZE):
+            pygame.draw.line(screen, BLACK, (WHITE_SPACE, i), (GRID_WIDTH-WHITE_SPACE, i), 1)
+    
+    #Draw text labels
+    def drawLabels(self, board):
+        for i in range(len(board)):
+            for j in range(len(board[i])):
+                screen.blit(self.font.render(str(board[i][j]), True, BLACK), (WHITE_SPACE+j*CELL_SIZE, WHITE_SPACE+CELL_SIZE/4+i*CELL_SIZE))
 # Create a list of pieces
 pieces = [Piece(0, 0, BLUE)]
 cpiece = -1
+board = Board()
 # Main loop
 running = True
+display = [["Jan", "Feb", "Mar", "Apr", "May", "Jun"],["Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],[1,2,3,4,5,6,7],[8,9,10,11,12,13,14], [15,16,17,18,19,20,21], [22,23,24,25,26,27,28], [29,30,31]]     
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -76,15 +97,14 @@ while running:
     screen.fill(WHITE)
 
     # Draw grid lines
-    for i in range(WHITE_SPACE, GRID_WIDTH+1-WHITE_SPACE, CELL_SIZE):
-        pygame.draw.line(screen, BLACK, (i, WHITE_SPACE), (i, GRID_HEIGHT-WHITE_SPACE), 1)
-    for i in range(WHITE_SPACE, GRID_HEIGHT+1-WHITE_SPACE, CELL_SIZE):
-        pygame.draw.line(screen, BLACK, (WHITE_SPACE, i), (GRID_WIDTH-WHITE_SPACE, i), 1)
+    board.drawGrid()
+
+    board.drawLabels(display)
 
     # Draw pieces
     for piece in pieces:
         piece.draw(screen)
 
-    pygame.display.flip()
+    pygame.display.update()
 
 pygame.quit()
