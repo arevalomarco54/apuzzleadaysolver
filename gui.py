@@ -28,51 +28,69 @@ class Piece:
     def __init__(self, x, y, color):
         self.x = x
         self.y = y
+        self.row = 0
+        self.col = 0
         self.immovable = False
         self.highlighted = False
         self.color = color
         self.rect = pygame.Rect(self.x, self.y, PIECE_SIZE, PIECE_SIZE)
-
-    def snap_to_grid(self,x,y):
-        self.x = math.floor(x / CELL_SIZE) * CELL_SIZE
-        self.y = math.floor(y / CELL_SIZE) * CELL_SIZE
-        self.rect.topleft = (self.x, self.y)
-
+    
+    #Draw piece on board
     def draw(self, screen):
         if self.highlighted == True:
             pygame.draw.rect(screen, BLACK, self.rect)
         else:
             pygame.draw.rect(screen, self.color, self.rect)
-        
+    #Translate piece by a set amount of rows and cols
+    def translate(self, rows, cols):
+        self.y += rows * CELL_SIZE
+        self.x += cols * CELL_SIZE
+        self.rect.topleft = (self.x, self.y)
+        self.row = self.y/CELL_SIZE
+        self.col = self.x/CELL_SIZE
+
+#Define a BigPiece class
+#A BigPiece is an array of Piece classes in a given shape
 class BigPiece():
+    #initialize class with shape
     def __init__(self, shape):
         self.shape = shape
         self.color = BLUE
+        self.row = 0
+        self.col = 0
         self.pieces = []
         self.clickedPiece = None
         self.construct()
-    def rotate(self):
-        self.shape = np.rot90(self.shape)
+    
+    #Rotate the shape of the array and reconstruct piece
+    def rotate(self, times):
+        self.shape = np.rot90(self.shape, times)
         self.construct()
+
+    #Construct piece based on given array
     def construct(self):
         self.pieces = []
         for i in range(len(self.shape)):
             row = []
             for j in range(len(self.shape[i])):
                 if (self.shape[i][j]==1):
-                    piece = Piece(j*CELL_SIZE, i*CELL_SIZE, self.color)
+                    piece = Piece((j+self.col)*CELL_SIZE, (i+self.row)*CELL_SIZE, self.color)
                     row.append(piece)
             self.pieces.append(row)
+    
+    #Highlight a BigPiece, or unhighlights it
     def highlight(self, t):
         for row in self.pieces:
             for piece in row:
                 piece.highlighted=t
     
+    #Draw BigPiece to board by drawing each of the Piece in the array
     def draw(self, screen):
         for row in self.pieces:
             for piece in row:
                 piece.draw(screen)
 
+    #Check to see if BigPiece has been clicked by checking to see if any Piece has been clicked
     def checkClicked(self,x,y):
         for row in self.pieces:
             for piece in row:
@@ -81,13 +99,23 @@ class BigPiece():
                     self.clickedPiece = piece
                     return True
         return False
-
-    def translate(self, rows, cols):
+    
+    #Translate BigPiece to a given x,y coordinate
+    def translate(self, x, y):
+        cols = math.floor(x / CELL_SIZE)-(self.clickedPiece.x/CELL_SIZE)
+        rows = math.floor(y / CELL_SIZE)-(self.clickedPiece.y/CELL_SIZE)
+        minrow = 100
+        mincol =100
         for row in self.pieces:
             for piece in row:
-                piece.y += rows * CELL_SIZE
-                piece.x += cols * CELL_SIZE
-                piece.rect.topleft = (piece.x, piece.y)
+                piece.translate(rows, cols)
+                if piece.row<minrow:
+                    minrow = piece.row
+                if piece.col <mincol:
+                    mincol = piece.col
+        self.row = minrow
+        self.col = mincol
+
 
     
 #define Board class
@@ -144,13 +172,15 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT:
-                print('yay')
-                if(cpiece>-1):
-                    clicked = pieces[cpiece]
-                    clicked.rotate()
-                    clicked.highlight(False)
-                    cpiece = -1
+            if(cpiece>-1):
+                clicked = pieces[cpiece]
+                if event.key == pygame.K_LEFT:
+                    clicked.rotate(1)
+                    
+                if event.key == pygame.K_RIGHT:
+                    clicked.rotate(3)
+                clicked.highlight(False)
+                cpiece = -1
 
         # Handle mouse click to create new pieces
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -158,9 +188,7 @@ while running:
             print(x,y)
             if (cpiece>-1):
                 clicked = pieces[cpiece] 
-                cols = math.floor(x / CELL_SIZE)-(clicked.clickedPiece.x/CELL_SIZE)
-                rows = math.floor(y / CELL_SIZE)-(clicked.clickedPiece.y/CELL_SIZE)
-                clicked.translate(rows,cols)
+                clicked.translate(x,y)
                 clicked.highlight(False)
                 cpiece = -1
             else:
