@@ -31,9 +31,11 @@ class Board():
         self.current_layout = Board.initalBoard(month, day)
         self.recursion = []
         self.solutions = []
+        self.solutionPositions = []
         self.recursion.append(np.copy(self.current_layout))
         self.index = 0
         self.pieces = []
+        self.setPieces()
     
     #Display the current layout
     def displayBoard(self):
@@ -62,19 +64,22 @@ class Board():
         piece = self.pieces[index]
         self.recursion.append(np.copy(self.current_layout))
         for i in range(piece.getRotations()):
-            piece.rotate()
             length, width = piece.shape()
             for j in range(8 - width):
                 for k in range(8- length):
                     if(self.placePieceOnBoard(piece, k,j)):
+                        self.solutionPositions.append((k,j,i))
                         if (self.isSolved()):
+                            print(piece, k, j, i)
                             print("yay")
-                            self.solutions.append (np.copy(self.recursion))
+                            self.solutions.append(np.copy(self.solutionPositions))
                         else: 
                             self.solve(index+1)
+                        self.solutionPositions.pop()
+            piece.rotate()
         self.recursion.pop()
         self.current_layout = np.copy(self.recursion[-1])
-        
+    
 
                         
     #Check if board is solved
@@ -112,8 +117,33 @@ class Board():
                     
 
     #Setter function for pieces
-    def setPieces(self, pieces):
-        self.pieces = pieces
+    def setPieces(self):
+        zpiece = Piece(np.array([[1,1,0],
+                        [0,1,0],
+                        [0,1,1]]),2)
+        corner_piece = Piece(np.array([[1,0,0],
+                                [1,0,0],
+                                [1,1,1]]))
+        blockpiece = Piece(np.array([[1,1,1],
+                            [1,1,1]]),2)
+        upiece = Piece( np.array([[1,0,1],
+                        [1,1,1]]))
+        pinkpiece = Piece(np.array([[1,1,0],
+                            [1,1,1]]))
+        lpiece = Piece(np.array([[1,0],
+                        [1,0],
+                        [1,0],
+                        [1,1]]))
+        ypiece = Piece(np.array([[1,0],
+                        [1,1],
+                        [1,0],
+                        [1,0]]))
+        zzpiece = Piece(np.array([[1,0],
+                        [1,0],
+                        [1,1],
+                        [0,1]]))
+        self.pieces = [zpiece, corner_piece, blockpiece,upiece,pinkpiece,lpiece,ypiece,zzpiece]
+        
 
     #Set a piece at a specified row and col if is possible, return True if possible
     def placePieceOnBoard(self, piece, row, col):
@@ -149,36 +179,14 @@ class Piece():
         return self.rotations
         
 #Define all pieces for this game
-zpiece = Piece(np.array([[1,1,0],
-                        [0,1,0],
-                        [0,1,1]]),2)
-corner_piece = Piece(np.array([[1,0,0],
-                                [1,0,0],
-                                [1,1,1]]))
-blockpiece = Piece(np.array([[1,1,1],
-                            [1,1,1]]),2)
-upiece = Piece( np.array([[1,0,1],
-                        [1,1,1]]))
-pinkpiece = Piece(np.array([[1,1,0],
-                            [1,1,1]]))
-lpiece = Piece(np.array([[1,0],
-                        [1,0],
-                        [1,0],
-                        [1,1]]))
-ypiece = Piece(np.array([[1,0],
-                        [1,1],
-                        [1,0],
-                        [1,0]]))
-zzpiece = Piece(np.array([[1,0],
-                        [1,0],
-                        [1,1],
-                        [0,1]]))
-#Create and solve a board using those pieces and the defined date
-board = Board(2,10)
+
+"""Create and solve a board using those pieces and the defined date
+board = Board(2,12)
 board.displayBoard()
-board.setPieces([zpiece, corner_piece, blockpiece,upiece,pinkpiece,lpiece,ypiece,zzpiece])
 start = time.time()
 board.solve(0)
 print(board.solutions)
+print(board.solutions_Pos)
 end = time.time()
 print(end-start)
+"""

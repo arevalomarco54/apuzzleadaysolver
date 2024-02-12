@@ -1,6 +1,7 @@
 import pygame
 import math
 import numpy as np
+import solver
 # Define grid dimensions
 CELL_SIZE =60
 BLANK_SQUARES = 2
@@ -35,7 +36,6 @@ class Piece:
         self.y = y
         self.row = 0
         self.col = 0
-        self.immovable = False
         self.highlighted = False
         self.color = color
         self.r,self.g,self.b = color
@@ -121,15 +121,17 @@ class BigPiece():
         for row in self.pieces:
             for piece in row:
                 if (not piece ==0 and piece.x <=x and (piece.x+PIECE_SIZE)>=x and piece.y <=y and (piece.y+PIECE_SIZE)>=y): 
-                    self.highlight(True)
                     self.clickedPiece = piece
                     return True
         return False
     
     #Translate BigPiece to a given x,y coordinate
-    def translate(self, x, y):
+    def position(self, x, y):
         cols = math.floor(x / CELL_SIZE)-(self.clickedPiece.x/CELL_SIZE)
         rows = math.floor(y / CELL_SIZE)-(self.clickedPiece.y/CELL_SIZE)
+        self.translate(rows,cols)
+
+    def translate(self, rows, cols):
         minrow = 100
         mincol =100
         for row in self.pieces:
@@ -162,6 +164,7 @@ class Board():
         for i in range(len(board)):
             for j in range(len(board[i])):
                 screen.blit(self.font.render(str(board[i][j]), True, BLACK), (WHITE_SPACE+j*CELL_SIZE, WHITE_SPACE+CELL_SIZE/4+i*CELL_SIZE))
+    
 
 # Create a list of pieces
 zpiece = BigPiece(np.array([[1,1,0],
@@ -192,6 +195,20 @@ zzpiece = BigPiece(np.array([[1,0],
 
 pieces = [zpiece, corner_piece, blockpiece,upiece,pinkpiece,lpiece,ypiece,zzpiece]
 board = Board()
+def solveBoard():
+        print("solving")
+        sol = solver.Board(2,12)
+        sol.solve(0)
+        solutions = sol.solutions
+        pieces = [zpiece, corner_piece, blockpiece,upiece,pinkpiece,lpiece,ypiece,zzpiece]
+        solution = solutions[0]
+        for i in range(len(pieces)):
+            piece = pieces[i]
+            row,col,rot = solution[i]
+            piece.row = row+BLANK_SQUARES
+            piece.col = col+BLANK_SQUARES
+            piece.rotate(rot)
+
 
 
 # Main loop
@@ -208,11 +225,14 @@ while running:
         if event.type == pygame.KEYDOWN:
             if(clicked):
                 clicked_piece = pieces[-1]
-                if event.key == pygame.K_LEFT:
+                if event.key == pygame.K_LEFT or event.key == pygame.K_a:
                     clicked_piece.rotate(1)
                     
-                if event.key == pygame.K_RIGHT:
+                if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
                     clicked_piece.rotate(3)
+            if event.key == pygame.K_SPACE:
+                screen.fill(BLACK)
+                solveBoard()
     
                 
 
@@ -222,6 +242,7 @@ while running:
             for i in range(len(pieces)-1,-1,-1):
                 piece= pieces[i]
                 if(piece.checkClicked(x,y)): 
+                    piece.highlight(True)
                     pieces.append( piece)
                     pieces.remove(piece)
                     clicked = True
@@ -237,7 +258,7 @@ while running:
     if clicked:
         x, y = pygame.mouse.get_pos()
         clicked_piece = pieces[-1] 
-        clicked_piece.translate(x,y)
+        clicked_piece.position(x,y)
 
 
 
@@ -252,7 +273,6 @@ while running:
     for piece in pieces:
         piece.draw(screen)
     
-
     pygame.display.update()
 
 pygame.quit()
